@@ -81,5 +81,22 @@ Build `dist/`, then deploy with the work-order configuration:
 /opt/fleet/lib/deploy-static.sh lan-family-dayboard dist
 ```
 
-Live deployment identity and response-policy evidence will be appended after
-the production upload.
+Repair commit `b42ab4f` was pushed to `main`. Azure Static Web Apps deployment
+`0351cc59-de10-483d-9986-212f10a36bf1` succeeded and
+<https://lan-family-dayboard.sociobot.in> returned HTTPS 200.
+
+Post-deploy verification passed:
+
+- Live `index.html`, hashed CSS/JS, all three image renditions, `sw.js`, web
+  manifest, icon, robots, and sitemap SHA-256 matched the local `dist/` files.
+- The worker `verify-url.sh` reported a clean load, title, English language,
+  one `h1`, `main`, complete alt text, named buttons, and zero console errors.
+- Live 390 px checks proved Undo remains unchecked after reload, whitespace-only
+  input stores nothing, and **Refresh LAN feeds** measures 161.73 × 44 px with
+  no overflow. Live axe serious/critical findings: 0.
+- The live service worker controlled the page, completed `update()`, exposed
+  cache `dayboard-v1`, and served the explicit offline saved-copy state.
+- A fresh browser contacted only `https://lan-family-dayboard.sociobot.in`.
+  Responses include HSTS, nosniff, no-referrer, restricted permissions, and the
+  repository CSP. HTML is `max-age=30`, hashed assets are one-year immutable,
+  and `sw.js` is `no-cache`; `/privacy` and `/terms` return 200.
