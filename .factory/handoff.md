@@ -1,47 +1,85 @@
-# LAN Family Dayboard — verification handoff
+# LAN Family Dayboard — repair handoff
 
-## FAIL — candidate must not be accepted yet
+## Release status
 
-Candidate commit: `9bb5f119a56c76c80f006261c2b3cdc763e42ab2`
-Verified URL: <https://lan-family-dayboard.sociobot.in>
-Verification date: 2026-08-28
+The three release-blocking findings in the independent verification report at
+commit `e501425adfa6408671450dddde5bca24c66be9c4` have been repaired without
+changing the researched scope or the static-web deployment class.
 
-The live deployment is byte-for-byte aligned with the locally built candidate
-for the application HTML, JS, CSS, images, service worker, manifest, icon,
-robots, and sitemap. Installation, unit tests, exact production build,
-repository E2E tests, Lighthouse, deployment policy checks, and normal
-calendar/feed/offline flows pass. The candidate still **fails** acceptance
-because the following defects were reproduced independently:
+## Repairs
 
-1. **S2 functional:** completing a responsibility exposes an Undo button that
-   does nothing; the completion remains checked and persisted.
-2. **S2 input/recovery:** a whitespace-only responsibility title is accepted,
-   creating and persisting a blank responsibility.
-3. **S3 mobile accessibility:** Refresh LAN feeds measures 32 px high at the
-   required 390 px viewport, below the 44 px minimum touch target.
+1. The completion toast now binds its dynamically inserted **Undo** control.
+   Undo reverses the per-day completion in memory and local storage, rerenders
+   the responsibility as unchecked, and confirms the reversal.
+2. Responsibility submission now validates the trimmed name before mutation.
+   A whitespace-only name leaves the dialog open, focuses the field, sets
+   `aria-invalid="true"`, and exposes the linked inline `role="alert"` message.
+   Nothing is persisted.
+3. **Refresh LAN feeds** is now at least 44 CSS px high. The toast recovery
+   control follows the same touch baseline. The 390 px header retains 8 px
+   target spacing, drops its redundant wordmark, and has no horizontal
+   overflow.
 
-See [.factory/verification.md](verification.md) for exact reproductions,
-passing evidence, response policies, bundle measurements, PWA/offline checks,
-and required fixes.
+Exact Playwright regressions cover Undo plus reload persistence, whitespace-only
+validation plus storage, and the refresh control's measured width/height plus
+390 px overflow. They run in both desktop Chromium and the 390 × 844 mobile
+project.
 
-## How to reproduce the verified checks
+## Verification evidence
+
+Run from `/work/repo`:
 
 ```sh
 npm ci
 npm test
 npm run build
 npm run test:e2e
-npm run preview
 ```
 
-The production command is `npm run build`; it writes `dist/`. The verifier also
-ran Lighthouse 12.8.2 against the built preview (100/100/100/100 for
-performance/accessibility/best-practices/SEO) and browser checks on both the
-preview and the live URL.
+Results on 2026-08-28:
 
-## Next steps
+- Clean `npm ci`: 60 packages installed, 0 vulnerabilities.
+- `npm test`: 4/4 Vitest unit tests passed.
+- `npm run build`: TypeScript `tsc --noEmit` and Vite production build passed;
+  `dist/index.html` is at the static-site root.
+- Production output: JS 24,491 B (9.20 KB gzip), CSS 14,914 B (4.06 KB gzip),
+  16,508 B mobile hero, 44,272 B desktop hero; no external fonts.
+- `npm run test:e2e`: 14/14 Playwright tests passed across desktop and 390 ×
+  844 mobile. The three repaired cases account for six focused passes.
+- Axe Playwright scans: 0 serious/critical findings in both viewports and both
+  light and dark treatments. The production smoke check found `lang="en"`, one
+  `h1`, a `main`, complete image alt text, named buttons, and no console errors.
+- Keyboard smoke: Tab exposed the skip link, Enter focused `#main`; native
+  checkbox keyboard behavior and dialog controls remain covered by the browser
+  suite. Reduced-motion transition duration measured `0.00001s`.
+- Visual review: empty desktop at 1366 × 900 and empty/populated mobile at 390
+  × 844 are legible with no clipping or horizontal overflow. All visible
+  populated mobile buttons measured at least 44 px in both dimensions.
+- Lighthouse 12.8.2 mobile: Performance 99, Accessibility 100, Best Practices
+  100, SEO 100; FCP 1.0 s, LCP 1.6 s, CLS 0, TBT 70 ms, 32 KiB transfer.
+- Production PWA smoke: service worker controlled the page, `update()`
+  completed, cache `dayboard-v1` existed, and an offline reload rendered
+  **Today at home** with **Offline · showing saved copy**.
+- Privacy/routes: a fresh production load contacted only its own origin;
+  `/privacy` and `/terms` rendered their intended pages. The repository's SWA
+  config retains SPA fallback, immutable hashed-asset caching, `sw.js`
+  revalidation, CSP, no-referrer, nosniff, and restricted device permissions.
+- Packaging/consumer validation is not applicable to this static-web artifact;
+  the deployable consumer boundary is the verified `dist/` root.
 
-Fix the three defects above, add focused automated regressions for the first
-two, rebuild, deploy, and repeat verification. Advanced recurrence limitations
-and LAN CORS/mixed-content constraints remain documented product limitations,
-not the basis for this FAIL.
+## Known limits
+
+The previously documented non-blocking limits are unchanged: advanced RFC 5545
+recurrence forms are not expanded; browser CORS and mixed-content policy governs
+user-run LAN feeds; e-ink ghosting behavior remains device-specific.
+
+## Deployment
+
+Build `dist/`, then deploy with the work-order configuration:
+
+```sh
+/opt/fleet/lib/deploy-static.sh lan-family-dayboard dist
+```
+
+Live deployment identity and response-policy evidence will be appended after
+the production upload.

@@ -32,6 +32,7 @@ function announce(message: string, isError = false, undo = false) {
   if (!region) return;
   region.className = `toast ${isError ? 'is-error' : ''}`;
   region.innerHTML = `<span>${escapeHTML(message)}</span>${undo ? '<button type="button" data-action="undo-chore">Undo</button>' : ''}`;
+  region.querySelector<HTMLElement>('[data-action="undo-chore"]')?.addEventListener('click', handleAction);
   region.hidden = false;
   window.setTimeout(() => { if (region.textContent?.includes(message)) region.hidden = true; }, 6000);
 }
@@ -189,7 +190,7 @@ function dialogs() {
     ${calendars ? `<div class="saved-list"><h3>On this display</h3><ul>${calendars}</ul></div>` : ''}
   </form></dialog>
   <dialog id="chore-dialog" aria-labelledby="chore-title"><form id="chore-form" class="dialog-shell"><div class="dialog-heading"><div><p class="eyebrow">Shared responsibility</p><h2 id="chore-title">Add a responsibility</h2></div><button class="icon-button" type="button" data-action="close-chore" aria-label="Close responsibility form">×</button></div>
-    <div class="field"><label for="chore-name">What needs doing?</label><input id="chore-name" name="title" required maxlength="80" autocomplete="off" placeholder="Water the plants"></div>
+    <div class="field"><label for="chore-name">What needs doing?</label><input id="chore-name" name="title" required maxlength="80" autocomplete="off" placeholder="Water the plants" aria-describedby="chore-name-error"><p class="field-error" id="chore-name-error" role="alert" hidden>Enter a name for this responsibility.</p></div>
     <div class="field"><label for="chore-person">Who is it for? <span>Optional</span></label><input id="chore-person" name="person" maxlength="40" autocomplete="off" placeholder="Sam or everyone"></div>
     <fieldset><legend>Repeat on</legend><div class="day-checks">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((day, index) => `<label><input type="checkbox" name="days" value="${index}" ${index === selectedDate.getDay() ? 'checked' : ''}><span>${day}</span></label>`).join('')}</div><p class="field-error" id="days-error" role="alert" hidden>Choose at least one day.</p></fieldset>
     <button class="primary" type="submit">Add to the board</button>
@@ -292,11 +293,20 @@ function addChore(event: SubmitEvent) {
   event.preventDefault();
   const form = event.currentTarget as HTMLFormElement;
   const data = new FormData(form);
+  const title = String(data.get('title') ?? '').trim();
   const days = data.getAll('days').map(Number);
-  const error = form.querySelector<HTMLElement>('#days-error')!;
-  if (!days.length) { error.hidden = false; return; }
-  error.hidden = true;
-  state.chores.push({ id: crypto.randomUUID(), title: String(data.get('title')).trim(), person: String(data.get('person')).trim(), days, createdAt: new Date().toISOString() });
+  const titleInput = form.querySelector<HTMLInputElement>('#chore-name')!;
+  const titleError = form.querySelector<HTMLElement>('#chore-name-error')!;
+  const daysError = form.querySelector<HTMLElement>('#days-error')!;
+  titleError.hidden = Boolean(title);
+  if (title) titleInput.removeAttribute('aria-invalid');
+  else titleInput.setAttribute('aria-invalid', 'true');
+  daysError.hidden = Boolean(days.length);
+  if (!title || !days.length) {
+    (title ? form.querySelector<HTMLInputElement>('input[name="days"]') : titleInput)?.focus();
+    return;
+  }
+  state.chores.push({ id: crypto.randomUUID(), title, person: String(data.get('person') ?? '').trim(), days, createdAt: new Date().toISOString() });
   persist(); (document.querySelector('#chore-dialog') as HTMLDialogElement).close(); renderApp(); announce('Responsibility added.');
 }
 
