@@ -27,7 +27,7 @@ Verified on 2026-08-28:
 - `npm run test:e2e`: 8 Chromium tests passed across desktop and 390 × 844 mobile, including ICS import, chore add/complete/persistence, empty/privacy routes, console-error checks, and axe-core scanning in both themes.
 - Axe-core: zero serious or critical violations in both tested viewports.
 - `npm run build`: passes; output lands in `dist/` with `index.html` at the root.
-- Production payload: 24.02 KB JS / 14.97 KB CSS uncompressed (9.06 KB / 4.08 KB gzip); hero 44 KB desktop and 17 KB mobile WebP.
+- Production payload: 24.05 KB JS / 14.97 KB CSS uncompressed (9.07 KB / 4.08 KB gzip); hero 44 KB desktop and 17 KB mobile WebP.
 - Lighthouse 12.8.2 mobile: Performance 99, Accessibility 100, Best Practices 100, SEO 100. FCP 0.9 s, LCP 1.5 s, CLS 0, TBT 140 ms.
 - Visual review completed at 1440 × 1000 and 390 × 844. No console errors were observed during end-to-end runs.
 
