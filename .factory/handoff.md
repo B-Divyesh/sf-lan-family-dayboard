@@ -1,42 +1,47 @@
-# LAN Family Dayboard — build handoff
+# LAN Family Dayboard — verification handoff
 
-## Shipped
+## FAIL — candidate must not be accepted yet
 
-- A finished Vite + vanilla TypeScript static application for household tablets and wall displays.
-- Local ICS file import with safe text rendering, date-only/timed events, TZID/UTC dates, common recurrence rules, exclusions, cancelled-event filtering, and actionable parse errors.
-- Re-importing the same filename replaces its saved calendar, providing the required offline/manual-refresh path.
-- Optional user-run LAN ICS feeds with manual refresh, no credentials, no proxy, CORS/mixed-content guidance, and last-good-copy behavior on failure.
-- Today/tomorrow view, date navigation, calendar identity markers, recurring responsibilities, per-day completion with undo, explicit deletion confirmations, dark/light/system themes, live offline state, keyboard display mode (`D` / `Escape`), and landscape weekly printing.
-- Local-only persistence, `/privacy` and `/terms`, no analytics, no third-party runtime assets, an installable service worker, and Azure Static Web Apps navigation/security/cache configuration.
-- Original “household day orbit” empty-state art generated through the factory image deployment, visually reviewed and optimized to 44 KB desktop / 17 KB mobile WebP. Prompt and provenance are in `.factory/design.md` and `assets/src/day-orbit.json`.
+Candidate commit: `9bb5f119a56c76c80f006261c2b3cdc763e42ab2`
+Verified URL: <https://lan-family-dayboard.sociobot.in>
+Verification date: 2026-08-28
 
-## Verification
+The live deployment is byte-for-byte aligned with the locally built candidate
+for the application HTML, JS, CSS, images, service worker, manifest, icon,
+robots, and sitemap. Installation, unit tests, exact production build,
+repository E2E tests, Lighthouse, deployment policy checks, and normal
+calendar/feed/offline flows pass. The candidate still **fails** acceptance
+because the following defects were reproduced independently:
 
-Run from `/work/repo`:
+1. **S2 functional:** completing a responsibility exposes an Undo button that
+   does nothing; the completion remains checked and persisted.
+2. **S2 input/recovery:** a whitespace-only responsibility title is accepted,
+   creating and persisting a blank responsibility.
+3. **S3 mobile accessibility:** Refresh LAN feeds measures 32 px high at the
+   required 390 px viewport, below the 44 px minimum touch target.
+
+See [.factory/verification.md](verification.md) for exact reproductions,
+passing evidence, response policies, bundle measurements, PWA/offline checks,
+and required fixes.
+
+## How to reproduce the verified checks
 
 ```sh
-npm install
+npm ci
 npm test
 npm run build
 npm run test:e2e
+npm run preview
 ```
 
-Verified on 2026-08-28:
-
-- `npm test`: 4 unit tests passed.
-- `npm run test:e2e`: 8 Chromium tests passed across desktop and 390 × 844 mobile, including ICS import, chore add/complete/persistence, empty/privacy routes, console-error checks, and axe-core scanning in both themes.
-- Axe-core: zero serious or critical violations in both tested viewports.
-- `npm run build`: passes; output lands in `dist/` with `index.html` at the root.
-- Production payload: 24.05 KB JS / 14.97 KB CSS uncompressed (9.07 KB / 4.08 KB gzip); hero 44 KB desktop and 17 KB mobile WebP.
-- Lighthouse 12.8.2 mobile: Performance 99, Accessibility 100, Best Practices 100, SEO 100. FCP 0.9 s, LCP 1.5 s, CLS 0, TBT 140 ms.
-- Visual review completed at 1440 × 1000 and 390 × 844. No console errors were observed during end-to-end runs.
-
-## Known limits
-
-- Advanced RFC 5545 recurrence features such as `BYSETPOS`, detached recurrence overrides, and arbitrary `RDATE` sets are not expanded. Common `DAILY`, `WEEKLY`, `MONTHLY`, `BYDAY`, `INTERVAL`, `COUNT`, `UNTIL`, and `EXDATE` forms are supported.
-- Browser security determines whether a LAN feed can be fetched. HTTPS mixed-content rules and missing CORS headers cannot be bypassed by a static app.
-- E-ink refresh behavior varies by device browser; the UI avoids ambient animation and provides manual refresh/display controls, but device-specific ghosting modes are outside the web app's control.
+The production command is `npm run build`; it writes `dist/`. The verifier also
+ran Lighthouse 12.8.2 against the built preview (100/100/100/100 for
+performance/accessibility/best-practices/SEO) and browser checks on both the
+preview and the live URL.
 
 ## Next steps
 
-Run the success-measure household trial. Based on actual calendars encountered, add targeted recurrence fixtures before expanding RFC 5545 support. A future preconfigured device image can reuse this static build without adding cloud accounts.
+Fix the three defects above, add focused automated regressions for the first
+two, rebuild, deploy, and repeat verification. Advanced recurrence limitations
+and LAN CORS/mixed-content constraints remain documented product limitations,
+not the basis for this FAIL.
