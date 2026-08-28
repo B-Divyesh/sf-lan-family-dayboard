@@ -1,0 +1,10 @@
+{
+  "slug": "lan-family-dayboard",
+  "title": "LAN Family Dayboard",
+  "artifact_class": "static-web",
+  "user": "A household that wants a shared tablet or e-ink display for today's events and responsibilities without creating cloud accounts for every family member.",
+  "smallest_useful_product": "Static web dayboard that reads manually imported ICS files or a user-run LAN feed, renders a big today/tomorrow view and chores, and prints a weekly sheet.",
+  "constraints": "Parse ICS locally and safely; never scrape third-party calendars or store credentials; provide a clear manual-refresh path for offline displays.",
+  "monetization": "free",
+  "success_measure": "In a two-week household trial, participants consult the display on at least ten days and report fewer than two missed shared events attributable to calendar visibility."
+}
