@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://lan-family-dayboard.sociobot.in/sitemap.xml

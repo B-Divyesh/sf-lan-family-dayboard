@@ -1,0 +1,10 @@
+{
+  "name": "LAN Family Dayboard",
+  "short_name": "Dayboard",
+  "description": "A private, no-account family calendar display.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f0e6",
+  "theme_color": "#1a6775",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
