@@ -1,102 +1,61 @@
-# LAN Family Dayboard — repair handoff
+# LAN Family Dayboard — independent verification handoff
 
-## Release status
+## Release status: FAIL
 
-The three release-blocking findings in the independent verification report at
-commit `e501425adfa6408671450dddde5bca24c66be9c4` have been repaired without
-changing the researched scope or the static-web deployment class.
+Candidate `bb87e500fd3c664f4fe63d8954e7e6e747892d11` was independently verified on
+2026-08-28 against <https://lan-family-dayboard.sociobot.in>. The live runtime
+matches the candidate build byte for byte, but the acceptance contract is not
+met.
 
-## Repairs
+Full evidence and reproductions are in
+[`.factory/verification-2.md`](verification-2.md).
 
-1. The completion toast now binds its dynamically inserted **Undo** control.
-   Undo reverses the per-day completion in memory and local storage, rerenders
-   the responsibility as unchecked, and confirms the reversal.
-2. Responsibility submission now validates the trimmed name before mutation.
-   A whitespace-only name leaves the dialog open, focuses the field, sets
-   `aria-invalid="true"`, and exposes the linked inline `role="alert"` message.
-   Nothing is persisted.
-3. **Refresh LAN feeds** is now at least 44 CSS px high. The toast recovery
-   control follows the same touch baseline. The 390 px header retains 8 px
-   target spacing, drops its redundant wordmark, and has no horizontal
-   overflow.
+## Blocking findings
 
-Exact Playwright regressions cover Undo plus reload persistence, whitespace-only
-validation plus storage, and the refresh control's measured width/height plus
-390 px overflow. They run in both desktop Chromium and the 390 × 844 mobile
-project.
+- **S2 accessibility:** at 390 px, `/privacy` and `/terms` each produce one axe
+  serious `link-name` violation. Their responsive logo link has neither visible
+  text nor an accessible name.
+- **S2 data integrity:** after a valid 4,000,000-byte calendar fills most local
+  storage, importing another valid 2,000,000-byte calendar reports success and
+  renders it, but does not persist it; reload silently removes the new calendar.
+  A caught quota error is overwritten by the success path.
 
-## Verification evidence
+Also recorded as S3: the 32 px logo and 21–24 px-high footer/legal links miss
+the explicit 44 px target baseline, and display mode does not exit on an
+arbitrary key or tap as `.factory/design.md` promises.
 
-Run from `/work/repo`:
+## Passing evidence
+
+- Clean checkout at the candidate SHA; no product code changed.
+- `npm ci`: passed, 0 vulnerabilities.
+- `npm test`: 4/4 passed.
+- `npm run build`: TypeScript and Vite production build passed; `dist/` exists.
+- `npm run test:e2e`: 14/14 passed on desktop and 390 px Chromium.
+- Initial JS 24,491 B, CSS 14,914 B, mobile hero 16,508 B, no fonts.
+- Independent production-preview journeys covered ICS import/replacement and
+  invalid/empty/oversize recovery, recurrence/spanning events, feed validation
+  and fallback, chore validation/persistence/Undo/delete, keyboard, print,
+  dark mode, reduced motion, and desktop/mobile layout.
+- Live requests had no unexpected third-party origins, console errors, or page
+  errors. Defensive headers and expected cache policies are active.
+- Live service-worker update and offline reload passed. The app manifest parsed
+  with no errors.
+- All 12 emitted runtime artifacts checked matched local `dist/` exactly.
+- Live Lighthouse 12.8.2 mobile: Performance 100, Accessibility 100, Best
+  Practices 100, SEO 100; FCP 957 ms, LCP 1,064 ms, TBT 0 ms, CLS 0, 32,074 B
+  initial transfer. Route-specific axe still fails as described above.
+
+## Re-run
 
 ```sh
 npm ci
 npm test
 npm run build
 npm run test:e2e
+npm run preview -- --port 4174
 ```
 
-Results on 2026-08-28:
-
-- Clean `npm ci`: 60 packages installed, 0 vulnerabilities.
-- `npm test`: 4/4 Vitest unit tests passed.
-- `npm run build`: TypeScript `tsc --noEmit` and Vite production build passed;
-  `dist/index.html` is at the static-site root.
-- Production output: JS 24,491 B (9.20 KB gzip), CSS 14,914 B (4.06 KB gzip),
-  16,508 B mobile hero, 44,272 B desktop hero; no external fonts.
-- `npm run test:e2e`: 14/14 Playwright tests passed across desktop and 390 ×
-  844 mobile. The three repaired cases account for six focused passes.
-- Axe Playwright scans: 0 serious/critical findings in both viewports and both
-  light and dark treatments. The production smoke check found `lang="en"`, one
-  `h1`, a `main`, complete image alt text, named buttons, and no console errors.
-- Keyboard smoke: Tab exposed the skip link, Enter focused `#main`; native
-  checkbox keyboard behavior and dialog controls remain covered by the browser
-  suite. Reduced-motion transition duration measured `0.00001s`.
-- Visual review: empty desktop at 1366 × 900 and empty/populated mobile at 390
-  × 844 are legible with no clipping or horizontal overflow. All visible
-  populated mobile buttons measured at least 44 px in both dimensions.
-- Lighthouse 12.8.2 mobile: Performance 99, Accessibility 100, Best Practices
-  100, SEO 100; FCP 1.0 s, LCP 1.6 s, CLS 0, TBT 70 ms, 32 KiB transfer.
-- Production PWA smoke: service worker controlled the page, `update()`
-  completed, cache `dayboard-v1` existed, and an offline reload rendered
-  **Today at home** with **Offline · showing saved copy**.
-- Privacy/routes: a fresh production load contacted only its own origin;
-  `/privacy` and `/terms` rendered their intended pages. The repository's SWA
-  config retains SPA fallback, immutable hashed-asset caching, `sw.js`
-  revalidation, CSP, no-referrer, nosniff, and restricted device permissions.
-- Packaging/consumer validation is not applicable to this static-web artifact;
-  the deployable consumer boundary is the verified `dist/` root.
-
-## Known limits
-
-The previously documented non-blocking limits are unchanged: advanced RFC 5545
-recurrence forms are not expanded; browser CORS and mixed-content policy governs
-user-run LAN feeds; e-ink ghosting behavior remains device-specific.
-
-## Deployment
-
-Build `dist/`, then deploy with the work-order configuration:
-
-```sh
-/opt/fleet/lib/deploy-static.sh lan-family-dayboard dist
-```
-
-Repair commit `b42ab4f` was pushed to `main`. Azure Static Web Apps deployment
-`0351cc59-de10-483d-9986-212f10a36bf1` succeeded and
-<https://lan-family-dayboard.sociobot.in> returned HTTPS 200.
-
-Post-deploy verification passed:
-
-- Live `index.html`, hashed CSS/JS, all three image renditions, `sw.js`, web
-  manifest, icon, robots, and sitemap SHA-256 matched the local `dist/` files.
-- The worker `verify-url.sh` reported a clean load, title, English language,
-  one `h1`, `main`, complete alt text, named buttons, and zero console errors.
-- Live 390 px checks proved Undo remains unchecked after reload, whitespace-only
-  input stores nothing, and **Refresh LAN feeds** measures 161.73 × 44 px with
-  no overflow. Live axe serious/critical findings: 0.
-- The live service worker controlled the page, completed `update()`, exposed
-  cache `dayboard-v1`, and served the explicit offline saved-copy state.
-- A fresh browser contacted only `https://lan-family-dayboard.sociobot.in`.
-  Responses include HSTS, nosniff, no-referrer, restricted permissions, and the
-  repository CSP. HTML is `max-age=30`, hashed assets are one-year immutable,
-  and `sw.js` is `no-cache`; `/privacy` and `/terms` return 200.
+After repairing the two S2 issues, repeat axe on the 390 px legal routes, the
+multi-calendar storage-quota/reload case, touch-target measurements, display
+mode exit checks, runtime hash comparison, and the live service-worker/offline
+smoke before changing the verdict to PASS.
