@@ -1,12 +1,13 @@
-# Handoff — LAN Family Dayboard repair 2
+# Handoff — LAN Family Dayboard verification 3
 
 ## Status
 
-PASS. The product shows today’s and tomorrow’s family events and recurring
+PASS. Independent verification 3 found zero findings and zero untested public
+claims. The product shows today’s and tomorrow’s family events and recurring
 responsibilities on a shared display without household accounts.
 
 Implementation candidate: 6547272dad0ce008e35828a23fca95d9be9f3a7b.
-Documentation evidence: 6a6397851515d042a92e933768805726826979d4.
+Documentation baseline: f3a22c7d490261bd7216cbfabcdac6cd8b935f64.
 The live product at https://lan-family-dayboard.sociobot.in matches this
 implementation candidate byte-for-byte for every emitted runtime file.
 
@@ -47,31 +48,32 @@ npm run test:claims
 ~~~
 
 Results: unit tests 4/4 passed; browser tests 20/20 passed; claim checks 21/21
-passed; build passed and produced dist/index.html. The claim command runs from
-a production preview and its fresh /demo entry point.
+passed; and every one of the 21 exact registered claim commands passed when
+run separately. Build passed and produced dist/index.html. The claim command
+runs from a production preview and its fresh /demo entry point.
 
 Additional checks:
 
 - Local and live verify-url smoke: title, language, main landmark, one h1,
   image alt text, labelled buttons, and zero load-time console errors.
-- Live fresh desktop and 390 px phone contexts: the job headline and sample
-  action were visible before scrolling. The demo showed school drop-off,
-  library books, family dinner, and responsibilities. Reset then Start for
-  real discarded demo storage and retained separate real data.
+- Live fresh desktop and 390 px phone contexts: the job headline, household
+  audience, and sample action were visible before scrolling. The demo showed
+  school drop-off, library books, family dinner, and responsibilities. A
+  seeded real task stayed separate while a demo-only task was added; Reset
+  restored the sample and Start for real discarded demo storage and restored
+  the real task.
 - Live Privacy and Terms at 390 px: axe serious/critical findings 0.
 - Live unknown URL: HTTP 404, designed page, route-specific title, and return
   action.
-- Live service worker: controller active, update completed, and offline /demo
-  reload showed Offline · showing saved copy with sample content.
+- Live service worker: controller active and offline /demo reload showed
+  Offline · showing saved copy with sample content.
 - Live Lighthouse mobile: Performance 100, Accessibility 100, Best Practices
   100, SEO 100; LCP 1,103 ms, CLS 0, TBT 49 ms.
 - Initial JavaScript is 31.21 KB raw and 10.84 KB gzip. CSS is 16.52 KB raw
   and 4.35 KB gzip.
 
-Evidence is under /work/.evidence/lan-dayboard-live-verify,
-/work/.evidence/lan-dayboard-live-phone-root.png,
-/work/.evidence/lan-dayboard-lighthouse.json, and the copied catalog
-description at /work/.evidence/catalog-description.txt.
+Verification-3 evidence is under `/work/.evidence/lan-dayboard-verify-3-live/`.
+The complete report is `.factory/verification-3.md`.
 
 ## Earlier findings
 
