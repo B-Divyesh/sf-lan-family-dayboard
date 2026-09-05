@@ -1,51 +1,27 @@
-# LAN Family Dayboard — independent verification handoff
+# Review 1 handoff — Show today’s family schedule and responsibilities
 
-## Release status: FAIL
+## Status: FAIL
 
-Candidate `bb87e500fd3c664f4fe63d8954e7e6e747892d11` was independently verified on
-2026-08-28 against <https://lan-family-dayboard.sociobot.in>. The live runtime
-matches the candidate build byte for byte, but the acceptance contract is not
-met.
+Review 1 found 10 defects and 20 untested public claim groups. The authoritative
+report is [`.factory/review-1.md`](review-1.md).
 
-Full evidence and reproductions are in
-[`.factory/verification-2.md`](verification-2.md).
+The deployed product matches implementation commit
+`b42ab4f029aac5381f58a88f6cbfd5a463adcf6a` byte for byte. The documentation
+baseline before this review was
+`dbab698b2f8f5812b836079db53c89734126e9aa`. No product code or deployment was
+changed.
 
-## Blocking findings
+## Main blockers
 
-- **S2 accessibility:** at 390 px, `/privacy` and `/terms` each produce one axe
-  serious `link-name` violation. Their responsive logo link has neither visible
-  text nor an accessible name.
-- **S2 data integrity:** after a valid 4,000,000-byte calendar fills most local
-  storage, importing another valid 2,000,000-byte calendar reports success and
-  renders it, but does not persist it; reload silently removes the new calendar.
-  A caught quota error is overwritten by the success path.
+- No one-click sample, demo label, reset, real-data separation, or demo docs.
+- No `.factory/claims.json`; 20 public claim groups lack required claim tests.
+- Serious unnamed-link axe failures on both mobile legal routes.
+- A second valid calendar can be reported as saved and then disappear after a
+  quota failure and reload.
+- The first screen, true 404, metadata, site skeleton, touch targets, and
+  display-mode exit behavior do not meet their contracts.
 
-Also recorded as S3: the 32 px logo and 21–24 px-high footer/legal links miss
-the explicit 44 px target baseline, and display mode does not exit on an
-arbitrary key or tap as `.factory/design.md` promises.
-
-## Passing evidence
-
-- Clean checkout at the candidate SHA; no product code changed.
-- `npm ci`: passed, 0 vulnerabilities.
-- `npm test`: 4/4 passed.
-- `npm run build`: TypeScript and Vite production build passed; `dist/` exists.
-- `npm run test:e2e`: 14/14 passed on desktop and 390 px Chromium.
-- Initial JS 24,491 B, CSS 14,914 B, mobile hero 16,508 B, no fonts.
-- Independent production-preview journeys covered ICS import/replacement and
-  invalid/empty/oversize recovery, recurrence/spanning events, feed validation
-  and fallback, chore validation/persistence/Undo/delete, keyboard, print,
-  dark mode, reduced motion, and desktop/mobile layout.
-- Live requests had no unexpected third-party origins, console errors, or page
-  errors. Defensive headers and expected cache policies are active.
-- Live service-worker update and offline reload passed. The app manifest parsed
-  with no errors.
-- All 12 emitted runtime artifacts checked matched local `dist/` exactly.
-- Live Lighthouse 12.8.2 mobile: Performance 100, Accessibility 100, Best
-  Practices 100, SEO 100; FCP 957 ms, LCP 1,064 ms, TBT 0 ms, CLS 0, 32,074 B
-  initial transfer. Route-specific axe still fails as described above.
-
-## Re-run
+## Verification run
 
 ```sh
 npm ci
@@ -53,9 +29,21 @@ npm test
 npm run build
 npm run test:e2e
 npm run preview -- --port 4174
+/opt/fleet/lib/verify-url.sh https://lan-family-dayboard.sociobot.in /work/.evidence/verify-url
 ```
 
-After repairing the two S2 issues, repeat axe on the 390 px legal routes, the
-multi-calendar storage-quota/reload case, touch-target measurements, display
-mode exit checks, runtime hash comparison, and the live service-worker/offline
-smoke before changing the verdict to PASS.
+Install, unit tests, build, all 14 repository browser tests, preview, root URL
+smoke, runtime hash comparison, and a successful Lighthouse retry passed. Live
+desktop/phone and boundary testing reproduced the blockers above. Lighthouse
+scored 100 in all four categories, with LCP 1.1 s and CLS 0; route-specific axe
+still fails.
+
+Review artifacts are under `/work/.evidence/`, including fresh-screen images,
+the live audit JSON, Lighthouse JSON, a print PDF, the copied QA report, and the
+machine-readable verdict.
+
+## Next steps
+
+Repair every finding in `.factory/review-1.md`, add the demo and registered
+claim tests, deploy the implementation, then repeat the full independent live
+review. Do not mark the product PASS from the existing green repository tests.
