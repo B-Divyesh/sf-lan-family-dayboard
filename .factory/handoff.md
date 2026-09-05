@@ -6,7 +6,7 @@ PASS. The product shows today’s and tomorrow’s family events and recurring
 responsibilities on a shared display without household accounts.
 
 Implementation candidate: 27a788d11feca02e1b97b61fbc296a44b32667b2.
-The documentation evidence SHA is added in the report-only follow-up commit.
+Documentation evidence: 6a6397851515d042a92e933768805726826979d4.
 The live product at https://lan-family-dayboard.sociobot.in matches this
 implementation candidate byte-for-byte for every emitted runtime file.
 
