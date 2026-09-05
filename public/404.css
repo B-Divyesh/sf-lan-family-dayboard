@@ -1,0 +1,20 @@
+:root { color-scheme: light dark; --paper: #f4f0e6; --ink: #172427; --teal: #1a6775; --line: #c6c5ba; --focus: #7745a4; }
+@media (prefers-color-scheme: dark) { :root { --paper: #151b1e; --ink: #f4f0e6; --teal: #72c3d1; --line: #4f5a5c; --focus: #d8a7ff; } }
+* { box-sizing: border-box; }
+body { min-width: 320px; margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.5 ui-sans-serif, system-ui, sans-serif; }
+a { color: var(--teal); text-underline-offset: 3px; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.skip-link { position: fixed; top: 8px; left: 8px; transform: translateY(-150%); padding: 10px 16px; background: var(--paper); border: 2px solid var(--focus); border-radius: 8px; color: var(--ink); }
+.skip-link:focus { transform: translateY(0); }
+header, footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px clamp(20px, 4vw, 64px); border-bottom: 1px solid var(--line); }
+footer { border-top: 1px solid var(--line); border-bottom: 0; color: color-mix(in srgb, var(--ink) 70%, transparent); font-size: 14px; }
+nav { display: flex; gap: 8px; }
+nav a, .brand, .button { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 8px 10px; }
+.brand { color: var(--ink); text-decoration: none; font-size: 18px; }
+.brand span { margin-right: 8px; font-size: 28px; color: var(--teal); }
+main { width: min(760px, 100%); min-height: calc(100vh - 160px); margin: 0 auto; padding: clamp(48px, 10vw, 120px) clamp(20px, 4vw, 64px); }
+main > p:first-child { margin: 0; color: var(--teal); font-weight: 800; letter-spacing: .14em; }
+h1 { max-width: 12ch; margin: 8px 0 16px; font: 500 clamp(42px, 8vw, 72px)/1.05 Georgia, serif; letter-spacing: -.04em; }
+.lede { max-width: 48ch; font-size: 19px; }
+.button { margin-top: 18px; border: 1px solid var(--teal); border-radius: 999px; background: var(--teal); color: #fff; font-weight: 700; text-decoration: none; }
+@media (max-width: 520px) { header, footer { align-items: flex-start; flex-direction: column; } footer { gap: 8px; } }

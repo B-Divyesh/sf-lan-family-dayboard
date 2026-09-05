@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
 
 test('imports a calendar and adds/completes a responsibility', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
-  await page.getByRole('button', { name: 'Import a calendar' }).click();
+  await page.getByRole('button', { name: 'Import a calendar' }).first().click();
   await page.locator('#calendar-file').setInputFiles({ name: 'family.ics', mimeType: 'text/calendar', buffer: Buffer.from(ics) });
   await expect(page.getByText('family.ics is now on the board.')).toBeVisible();
 
@@ -54,7 +54,7 @@ test('rejects and announces a whitespace-only responsibility name', async ({ pag
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('lan-dayboard-v1') || '{"chores":[]}').chores)).toEqual([]);
 
   await page.reload();
-  await expect(page.getByText('Put the household day in one place.')).toBeVisible();
+  await expect(page.getByText('Add your household schedule')).toBeVisible();
 });
 
 test('keeps the LAN feed refresh control at least 44px in both dimensions', async ({ page }) => {
@@ -74,9 +74,9 @@ test('keeps the LAN feed refresh control at least 44px in both dimensions', asyn
 });
 
 test('has useful privacy and empty mobile views', async ({ page }) => {
-  await expect(page.getByText('Put the household day in one place.')).toBeVisible();
+  await expect(page.getByText('Add your household schedule')).toBeVisible();
   await page.goto('/privacy');
-  await expect(page.getByRole('heading', { name: 'Your household data stays here.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Keep household data on this display' })).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
 });
 

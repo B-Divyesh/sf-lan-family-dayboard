@@ -1,4 +1,5 @@
 import './style.css';
+import { sampleDayboardState } from './demo';
 import { parseICS } from './ics';
 import { clearState, loadState, saveState } from './storage';
 import type { CalendarEvent, Chore, DayboardState, StoredCalendar } from './types';
@@ -7,6 +8,7 @@ const app = document.querySelector<HTMLDivElement>('#app')!;
 const dateTime = new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
 const shortDate = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 const timeOnly = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
+let demoMode = false;
 let state: DayboardState = loadState();
 let selectedDate = startOfDay(new Date());
 let lastCompleted: { choreId: string; date: string } | null = null;
@@ -21,10 +23,20 @@ function addDays(date: Date, days: number) { const next = new Date(date); next.s
 function dayKey(date: Date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; }
 function hash(value = '') { return [...value].reduce((sum, char) => (sum * 31 + char.charCodeAt(0)) | 0, 0); }
 function sameDay(a: Date, b: Date) { return dayKey(a) === dayKey(b); }
+function hasContent(value: DayboardState) { return value.calendars.length > 0 || value.chores.length > 0; }
+
+function loadRouteState() {
+  demoMode = location.pathname.replace(/\/$/, '') === '/demo' || new URLSearchParams(location.search).get('demo') === '1';
+  if (!demoMode) { state = loadState(false); return; }
+  const savedDemo = loadState(true);
+  if (hasContent(savedDemo)) { state = savedDemo; return; }
+  state = sampleDayboardState();
+  try { saveState(state, true); } catch { /* Sample remains available in this tab. */ }
+}
 
 function persist(message?: string) {
-  try { saveState(state); if (message) announce(message); }
-  catch { announce('This browser could not save the change. Free some local storage and try again.', true); }
+  try { saveState(state, demoMode); if (message) announce(message); return true; }
+  catch { announce('This browser could not save the change. Free some local storage and try again.', true); return false; }
 }
 
 function announce(message: string, isError = false, undo = false) {
@@ -120,9 +132,9 @@ function emptyState() {
       <img src="/assets/day-orbit.jpg" width="1200" height="800" alt="Paper-cut circles and household symbols meeting in one shared orbit" fetchpriority="high" decoding="async">
     </picture>
     <div class="empty-copy">
-      <p class="eyebrow">Private by design</p>
-      <h2 id="empty-title">Put the household day in one place.</h2>
-      <p>Import a calendar file, add recurring responsibilities, or connect a calendar feed running on your own network. Everything stays in this browser.</p>
+      <p class="eyebrow">First calendar</p>
+      <h2 id="empty-title">Add your household schedule</h2>
+      <p>Import an ICS file or connect a calendar feed you run. Add recurring responsibilities when you are ready.</p>
       <div class="button-row">
         <button class="primary" type="button" data-action="open-import">Import a calendar</button>
         <button type="button" data-action="open-chore">Add a responsibility</button>
@@ -145,12 +157,15 @@ function weekPrint(events: CalendarEvent[]) {
 
 function renderApp() {
   themeClass();
+  document.title = demoMode ? 'Demo — LAN Family Dayboard' : 'LAN Family Dayboard — Family day schedule';
+  document.querySelector<HTMLLinkElement>('link[rel="canonical"]')!.href = `${location.origin}${demoMode ? '/demo' : '/'}`;
   const { events, errors } = parseAll(addDays(selectedDate, -6), 15);
   const hasContent = state.calendars.length || state.chores.length;
   const next = addDays(selectedDate, 1);
   app.innerHTML = `<header class="site-header">
     <div class="brand"><a href="/" aria-label="LAN Family Dayboard home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>LAN <b>Family Dayboard</b></span></a><small>No account · saved on this display</small></div>
-    <nav aria-label="Dayboard actions">
+    <nav class="site-nav" aria-label="Site"><a href="/demo">Demo</a><a href="/#how-it-works">How it works</a><a href="/privacy">Privacy</a></nav>
+    <nav class="action-nav" aria-label="Dayboard actions">
       <button type="button" data-action="open-chore"><span aria-hidden="true">＋</span> Add responsibility</button>
       <button type="button" data-action="open-import"><span aria-hidden="true">↥</span> Calendars</button>
       <button type="button" data-action="print"><span aria-hidden="true">▤</span> Print week</button>
@@ -158,8 +173,17 @@ function renderApp() {
     </nav>
   </header>
   <main id="main" tabindex="-1">
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow">Family dayboard</p>
+      <h1 id="page-title">Show today’s family events and chores</h1>
+      <p class="lede">For households using a shared display, it makes today’s plans and responsibilities easy to see.</p>
+      <div class="button-row"><a class="button primary" href="/demo">Try it with sample data</a><button type="button" data-action="open-import">Import a calendar</button></div>
+      <p class="action-note">The sample opens a full dayboard without changing your data.</p>
+      <ul class="plain-facts"><li>No accounts</li><li>Imported files stay in this browser</li><li>Free to use</li></ul>
+    </section>
+    ${demoMode ? '<section class="demo-banner" data-testid="demo-banner" role="status"><p><strong>Demo — sample data, nothing is saved to your real dayboard.</strong> Changes use separate demo storage.</p><div><button type="button" data-action="reset-demo">Reset demo</button><button type="button" data-action="start-real">Start for real</button></div></section>' : ''}
     <div class="date-toolbar" aria-label="Choose day">
-      <div><p class="eyebrow">Shared view</p><h1>${sameDay(selectedDate, new Date()) ? 'Today at home' : shortDate.format(selectedDate)}</h1></div>
+      <div><p class="eyebrow">Shared schedule</p><h2>${sameDay(selectedDate, new Date()) ? 'Today and tomorrow' : shortDate.format(selectedDate)}</h2></div>
       <div class="date-controls">
         <button class="icon-button" type="button" data-action="previous" aria-label="Previous day">←</button>
         <button type="button" data-action="today">Today</button>
@@ -169,8 +193,10 @@ function renderApp() {
     <div class="connection-line"><span class="connection-dot" aria-hidden="true"></span><span id="connection-text">Available offline</span><span>·</span><time id="clock">${timeOnly.format(new Date())}</time>${state.calendars.some(c => c.source === 'feed') ? `<button type="button" class="text-button" data-action="refresh" ${feedBusy ? 'disabled' : ''}>${feedBusy ? 'Refreshing…' : 'Refresh LAN feeds'}</button>` : ''}</div>
     ${errors.length ? `<div class="error-banner" role="alert"><strong>Some calendar items could not be shown.</strong><ul>${errors.map(error => `<li>${escapeHTML(error)}</li>`).join('')}</ul><button type="button" data-action="open-import">Review calendars</button></div>` : ''}
     ${hasContent ? `<div class="day-grid">${dayPanel(selectedDate, events, sameDay(selectedDate, new Date()) ? 'Today' : 'Selected day')}${dayPanel(next, events, sameDay(next, addDays(new Date(), 1)) ? 'Tomorrow' : 'Following day')}</div>` : emptyState()}
+  <section id="how-it-works" class="info-section" aria-labelledby="how-title"><h2 id="how-title">How it works</h2><ol><li><strong>Import a calendar.</strong> Choose an ICS file exported by your calendar app.</li><li><strong>Add responsibilities.</strong> Repeat household tasks on the days they belong.</li><li><strong>Check the board.</strong> Use the same screen for today, tomorrow, and a printed week.</li></ol></section>
+  <section class="info-section" aria-labelledby="limits-title"><h2 id="limits-title">Privacy and limits</h2><p>Calendar files and responsibilities stay in this browser. A feed is fetched directly only when you request a refresh. This is not hosted calendar sync, messaging, or a replacement for checking important source calendars.</p></section>
   </main>
-  <footer class="site-footer"><p>Made for the room, not the cloud.</p><nav aria-label="Legal and project information"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="https://github.com/B-Divyesh/sf-lan-family-dayboard">Source</a></nav><small>Illustration generated for this project.</small></footer>
+  <footer class="site-footer"><p>Shared daily schedule for one household display.</p><nav aria-label="Legal and project information"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="https://github.com/B-Divyesh/sf-lan-family-dayboard" target="_blank" rel="noreferrer">Source (opens in a new tab)</a></nav><small>Built by Param Factory · build 1.1.0</small></footer>
   ${dialogs()}
   <div id="status" class="toast" role="status" aria-live="polite" hidden></div>
   ${weekPrint(events)}`;
@@ -199,8 +225,15 @@ function dialogs() {
 
 function legalPage(kind: 'privacy' | 'terms') {
   const privacy = kind === 'privacy';
-  document.title = `${privacy ? 'Privacy' : 'Terms'} · LAN Family Dayboard`;
-  app.innerHTML = `<header class="site-header"><div class="brand"><a href="/"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>LAN <b>Family Dayboard</b></span></a></div></header><main id="main" class="legal"><a class="back-link" href="/">← Back to dayboard</a><p class="eyebrow">Plain-language ${kind}</p><h1>${privacy ? 'Your household data stays here.' : 'Terms of use'}</h1>${privacy ? `<p class="lede">LAN Family Dayboard has no accounts, analytics, advertising, or remote database.</p><h2>What is stored</h2><p>Imported calendar contents, LAN feed addresses, responsibilities, completion history, and display preferences are stored only in this browser’s local storage. Calendar files are parsed on the device.</p><h2>Network access</h2><p>The app contacts an address only when you ask it to refresh a LAN feed. Your browser sends that request directly. We do not proxy it or receive its contents. Installing the app may request its own static files for offline use.</p><h2>Your control</h2><p>Remove individual calendars from Calendars, or clear site data in your browser to erase everything. Exported or printed copies are yours to manage.</p>` : `<p class="lede">This free, open-source utility is provided for household coordination.</p><h2>Use</h2><p>You may use, copy, and modify the software under the MIT license. You are responsible for the calendar files and feed addresses you choose to open.</p><h2>No warranty</h2><p>The dayboard is provided “as is,” without warranties. Check the source calendar before relying on it for safety-critical, medical, travel, or legal appointments.</p><h2>Feed compatibility</h2><p>LAN feeds must be valid ICS and allow browser requests. Browser security may block insecure HTTP feeds when the dayboard itself is served over HTTPS.</p>`}<p class="legal-date">Effective 28 August 2026</p></main><footer class="site-footer"><p>Made for the room, not the cloud.</p></footer>`;
+  document.title = privacy ? 'Privacy — LAN Family Dayboard' : 'Terms — LAN Family Dayboard';
+  document.querySelector<HTMLLinkElement>('link[rel="canonical"]')!.href = `${location.origin}/${kind}`;
+  app.innerHTML = `<header class="site-header"><div class="brand"><a href="/" aria-label="LAN Family Dayboard home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>LAN <b>Family Dayboard</b></span></a></div><nav class="site-nav" aria-label="Site"><a href="/demo">Demo</a><a href="/#how-it-works">How it works</a><a href="/privacy">Privacy</a></nav></header><main id="main" class="legal"><a class="back-link" href="/">← Back to dayboard</a><p class="eyebrow">Plain-language ${kind}</p><h1 tabindex="-1">${privacy ? 'Keep household data on this display' : 'Use LAN Family Dayboard safely'}</h1>${privacy ? `<p class="lede">LAN Family Dayboard has no accounts, analytics, advertising, or remote database.</p><h2>What is stored</h2><p>Imported calendar contents, LAN feed addresses, responsibilities, completion history, and display preferences are stored only in this browser’s local storage. Calendar files are parsed on the device.</p><h2>Network access</h2><p>The app contacts an address only when you ask it to refresh a LAN feed. Your browser sends that request directly. We do not proxy it or receive its contents. Installing the app may request its own static files for offline use.</p><h2>Your control</h2><p>Remove individual calendars from Calendars, or clear site data in your browser to erase everything. Exported or printed copies are yours to manage.</p>` : `<p class="lede">This free, open-source utility is provided for household coordination.</p><h2>Use</h2><p>You may use, copy, and modify the software under the MIT license. You are responsible for the calendar files and feed addresses you choose to open.</p><h2>No warranty</h2><p>The dayboard is provided “as is,” without warranties. Check the source calendar before relying on it for safety-critical, medical, travel, or legal appointments.</p><h2>Feed compatibility</h2><p>LAN feeds must be valid ICS and allow browser requests. Browser security may block insecure HTTP feeds when the dayboard itself is served over HTTPS.</p>`}<p class="legal-date">Effective 5 September 2026</p></main><footer class="site-footer"><p>Shared daily schedule for one household display.</p><nav aria-label="Legal and project information"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="https://github.com/B-Divyesh/sf-lan-family-dayboard" target="_blank" rel="noreferrer">Source (opens in a new tab)</a></nav><small>Built by Param Factory · build 1.1.0</small></footer>`;
+}
+
+function notFoundPage() {
+  document.title = 'Page not found — LAN Family Dayboard';
+  document.querySelector<HTMLLinkElement>('link[rel="canonical"]')!.href = `${location.origin}/404`;
+  app.innerHTML = `<header class="site-header"><div class="brand"><a href="/" aria-label="LAN Family Dayboard home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>LAN <b>Family Dayboard</b></span></a></div><nav class="site-nav" aria-label="Site"><a href="/demo">Demo</a><a href="/#how-it-works">How it works</a><a href="/privacy">Privacy</a></nav></header><main id="main" class="legal not-found"><p class="eyebrow">404</p><h1 tabindex="-1">This page is not on the dayboard</h1><p class="lede">Use the home page to view your household schedule.</p><a class="button primary" href="/">Go to the dayboard</a></main><footer class="site-footer"><p>Shared daily schedule for one household display.</p><nav aria-label="Legal and project information"><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav><small>Built by Param Factory · build 1.1.0</small></footer>`;
 }
 
 function bindEvents() {
@@ -225,7 +258,12 @@ async function handleAction(event: Event) {
   if (action === 'toggle-chore') toggleChore(target as HTMLInputElement);
   if (action === 'delete-chore') deleteChore(target.dataset.id!);
   if (action === 'remove-calendar') removeCalendar(Number(target.dataset.index));
-  if (action === 'undo-chore' && lastCompleted) { toggleCompletion(lastCompleted.choreId, lastCompleted.date); lastCompleted = null; renderApp(); announce('Completion undone.'); }
+  if (action === 'undo-chore' && lastCompleted) {
+    if (!toggleCompletion(lastCompleted.choreId, lastCompleted.date)) { renderApp(); return; }
+    lastCompleted = null; renderApp(); announce('Completion undone.');
+  }
+  if (action === 'reset-demo') resetDemo();
+  if (action === 'start-real') startForReal();
 }
 
 async function importFile(event: Event) {
@@ -236,20 +274,22 @@ async function importFile(event: Event) {
   try {
     const ics = await file.text();
     parseICS(ics, startOfDay(selectedDate), addDays(selectedDate, 366), file.name);
+    const previousState = structuredClone(state);
     const name = file.name.replace(/\.ics$/i, '') || 'Imported calendar';
     const replacement = { name, ics, source: 'file' as const, importedAt: new Date().toISOString() };
     const existing = state.calendars.findIndex(calendar => calendar.source === 'file' && calendar.name === name);
     if (existing >= 0) state.calendars.splice(existing, 1, replacement);
     else state.calendars.push(replacement);
-    persist();
+    if (!persist()) { state = previousState; return; }
     (document.querySelector('#import-dialog') as HTMLDialogElement).close();
     renderApp(); announce(`${file.name} is now on the board.`);
   } catch (error) { announce(error instanceof Error ? error.message : 'The calendar could not be read.', true); }
 }
 
 function changeTheme(event: Event) {
+  const previousState = structuredClone(state);
   state.theme = (event.currentTarget as HTMLSelectElement).value as DayboardState['theme'];
-  persist('Display theme saved.');
+  if (!persist('Display theme saved.')) { state = previousState; renderApp(); return; }
   themeClass();
 }
 
@@ -270,21 +310,26 @@ async function addFeed() {
   if (!['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password) { announce('Use an HTTP or HTTPS address without a username or password.', true); return; }
   try {
     const ics = await fetchFeed(parsed.href);
+    const previousState = structuredClone(state);
     state.calendars.push({ name: name || parsed.hostname, ics, source: 'feed', feedUrl: parsed.href, importedAt: new Date().toISOString() });
-    persist(); (document.querySelector('#import-dialog') as HTMLDialogElement).close(); renderApp(); announce('LAN calendar connected.');
+    if (!persist()) { state = previousState; return; }
+    (document.querySelector('#import-dialog') as HTMLDialogElement).close(); renderApp(); announce('LAN calendar connected.');
   } catch (error) { announce(`${error instanceof Error ? error.message : 'Could not reach that feed'} Your server may need an Access-Control-Allow-Origin header.`, true); }
 }
 
 async function refreshFeeds() {
   const feeds = state.calendars.filter(calendar => calendar.source === 'feed' && calendar.feedUrl);
   if (!feeds.length) return;
+  const previousState = structuredClone(state);
   feedBusy = true; renderApp();
   let updated = 0; const failures: string[] = [];
   await Promise.all(feeds.map(async calendar => {
     try { calendar.ics = await fetchFeed(calendar.feedUrl!); calendar.importedAt = new Date().toISOString(); updated += 1; }
     catch { failures.push(calendar.name); }
   }));
-  feedBusy = false; persist(); renderApp();
+  feedBusy = false;
+  if (updated && !persist()) { state = previousState; renderApp(); return; }
+  renderApp();
   if (failures.length) announce(`Could not refresh ${failures.join(', ')}. The last saved copy is still shown.`, true);
   else announce(`${updated} LAN ${updated === 1 ? 'calendar' : 'calendars'} refreshed.`);
 }
@@ -306,20 +351,24 @@ function addChore(event: SubmitEvent) {
     (title ? form.querySelector<HTMLInputElement>('input[name="days"]') : titleInput)?.focus();
     return;
   }
+  const previousState = structuredClone(state);
   state.chores.push({ id: crypto.randomUUID(), title, person: String(data.get('person') ?? '').trim(), days, createdAt: new Date().toISOString() });
-  persist(); (document.querySelector('#chore-dialog') as HTMLDialogElement).close(); renderApp(); announce('Responsibility added.');
+  if (!persist()) { state = previousState; return; }
+  (document.querySelector('#chore-dialog') as HTMLDialogElement).close(); renderApp(); announce('Responsibility added.');
 }
 
 function toggleCompletion(id: string, date: string) {
+  const previousState = structuredClone(state);
   const done = state.completions[date] ||= [];
   state.completions[date] = done.includes(id) ? done.filter(item => item !== id) : [...done, id];
   if (!state.completions[date].length) delete state.completions[date];
-  persist();
+  if (!persist()) { state = previousState; return false; }
+  return true;
 }
 
 function toggleChore(input: HTMLInputElement) {
   const id = input.dataset.id!; const date = input.dataset.date!;
-  toggleCompletion(id, date);
+  if (!toggleCompletion(id, date)) { renderApp(); return; }
   if (input.checked) { lastCompleted = { choreId: id, date }; renderApp(); announce('Marked complete.', false, true); }
   else { lastCompleted = null; renderApp(); announce('Marked not complete.'); }
 }
@@ -327,21 +376,55 @@ function toggleChore(input: HTMLInputElement) {
 function deleteChore(id: string) {
   const chore = state.chores.find(item => item.id === id);
   if (!chore || !window.confirm(`Remove “${chore.title}” from every day?`)) return;
+  const previousState = structuredClone(state);
   state.chores = state.chores.filter(item => item.id !== id);
   for (const key of Object.keys(state.completions)) state.completions[key] = state.completions[key].filter(item => item !== id);
-  persist(); renderApp(); announce('Responsibility removed.');
+  if (!persist()) { state = previousState; return; }
+  renderApp(); announce('Responsibility removed.');
 }
 
 function removeCalendar(index: number) {
   const calendar = state.calendars[index];
   if (!calendar || !window.confirm(`Remove “${calendar.name}” and its events from this display?`)) return;
-  state.calendars.splice(index, 1); persist(); renderApp(); announce('Calendar removed.');
+  const previousState = structuredClone(state);
+  state.calendars.splice(index, 1);
+  if (!persist()) { state = previousState; return; }
+  renderApp(); announce('Calendar removed.');
 }
 
 function toggleDisplay() {
   document.body.classList.toggle('display-mode');
-  if (document.body.classList.contains('display-mode')) document.documentElement.requestFullscreen?.().catch(() => undefined);
+  if (document.body.classList.contains('display-mode')) {
+    document.documentElement.requestFullscreen?.().catch(() => undefined);
+    announce('Display mode. Press any key or tap the board to show controls.');
+  }
   else if (document.fullscreenElement) document.exitFullscreen?.().catch(() => undefined);
+}
+
+function resetDemo() {
+  if (!demoMode) return;
+  const fresh = sampleDayboardState();
+  try {
+    clearState(true);
+    saveState(fresh, true);
+    state = fresh;
+    selectedDate = startOfDay(new Date());
+    lastCompleted = null;
+    renderApp();
+    announce('Demo reset.');
+  } catch { announce('This browser could not reset the sample. Reload to try again.', true); }
+}
+
+function startForReal() {
+  if (!demoMode) return;
+  try { clearState(true); }
+  catch { announce('This browser could not clear demo storage. Close the tab and try again.', true); return; }
+  history.pushState({}, '', '/');
+  demoMode = false;
+  state = loadState(false);
+  selectedDate = startOfDay(new Date());
+  renderApp();
+  window.requestAnimationFrame(() => document.querySelector<HTMLElement>('#page-title')?.focus());
 }
 
 function updateConnectivity() {
@@ -353,14 +436,18 @@ function updateConnectivity() {
 
 const route = location.pathname.replace(/\/$/, '');
 if (route === '/privacy' || route === '/terms') legalPage(route.slice(1) as 'privacy' | 'terms');
-else renderApp();
+else if (route === '' || route === '/demo' || new URLSearchParams(location.search).get('demo') === '1') { loadRouteState(); renderApp(); }
+else notFoundPage();
 
 window.addEventListener('online', updateConnectivity);
 window.addEventListener('offline', updateConnectivity);
 window.addEventListener('keydown', event => {
+  if (document.body.classList.contains('display-mode')) { toggleDisplay(); return; }
   if ((event.target as HTMLElement).matches('input, textarea, select')) return;
   if (event.key.toLowerCase() === 'd') toggleDisplay();
-  if (event.key === 'Escape' && document.body.classList.contains('display-mode')) toggleDisplay();
+});
+window.addEventListener('pointerdown', event => {
+  if (document.body.classList.contains('display-mode') && (event.target as HTMLElement).closest('main')) toggleDisplay();
 });
 window.setInterval(() => {
   const clock = document.querySelector('#clock');

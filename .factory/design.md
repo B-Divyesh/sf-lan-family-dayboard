@@ -31,7 +31,7 @@ All body text combinations meet 4.5:1; shape color is always reinforced by a lab
 
 ## Layout and interaction grammar
 
-The header reads like a paper masthead; the current date is the anchor. Today and tomorrow form a responsive two-column timeline, with chores on a distinct mustard rail. Events use a colored owner pip and a time track rather than nested generic cards. At 390 px, actions move into a labelled menu, dates stack, and nonessential illustration detail drops away. Display mode enlarges the current day and hides setup chrome; any key or tap reveals it again.
+The header reads like a paper masthead; the current date is the anchor. Today and tomorrow form a responsive two-column timeline, with chores on a distinct mustard rail. Events use a colored owner pip and a time track rather than nested generic cards. At 390 px, actions use short visible labels, dates stack, and nonessential illustration detail drops away. Display mode enlarges the current day and hides setup chrome; any key or tap reveals it again.
 
 Every control is a plain-language verb, at least 44 px tall, with a purple offset focus ring. Imported content appears from the file/input control that created it. Delete operations require named confirmation; completing a chore can be undone from a live status toast.
 
@@ -47,5 +47,10 @@ One wide hero illustration is used only in the first-run empty state and setup i
 - Date: 2026-08-28.
 - License/provenance: generated specifically for LAN Family Dayboard; original product asset, shipped under the repository's MIT license.
 - Source candidate and exact prompt live in `assets/src/day-orbit.json`; optimized WebP/AVIF renditions ship with explicit dimensions. Each candidate is visually reviewed for text artifacts, seams, unintended symbols, and palette consistency.
+
+The social preview at `public/assets/dayboard-social.jpg` is a 1200 × 630
+center crop derived from that reviewed original illustration. The 180 px Apple
+touch icon is a hand-drawn raster version of the shipped orbit mark. Both are
+original derivative product assets; no third-party image or font is loaded.
 
 Interface icons are original inline SVG paths or typographic marks authored for this repository; they are not copied from an icon library.

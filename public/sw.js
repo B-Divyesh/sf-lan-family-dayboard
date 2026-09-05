@@ -1,5 +1,5 @@
-const CACHE = 'dayboard-v1';
-const SHELL = ['/', '/index.html', '/icon.svg', '/manifest.webmanifest', '/assets/day-orbit-720.webp', '/assets/day-orbit.webp'];
+const CACHE = 'dayboard-v2';
+const SHELL = ['/', '/index.html', '/404.html', '/404.css', '/icon.svg', '/apple-touch-icon.png', '/manifest.webmanifest', '/assets/day-orbit-720.webp', '/assets/day-orbit.webp'];
 self.addEventListener('install', event => event.waitUntil((async () => {
   const cache = await caches.open(CACHE);
   await cache.addAll(SHELL);
