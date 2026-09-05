@@ -5,7 +5,7 @@
 PASS. The product shows today’s and tomorrow’s family events and recurring
 responsibilities on a shared display without household accounts.
 
-Implementation candidate: 27a788d11feca02e1b97b61fbc296a44b32667b2.
+Implementation candidate: 6547272dad0ce008e35828a23fca95d9be9f3a7b.
 Documentation evidence: 6a6397851515d042a92e933768805726826979d4.
 The live product at https://lan-family-dayboard.sociobot.in matches this
 implementation candidate byte-for-byte for every emitted runtime file.
