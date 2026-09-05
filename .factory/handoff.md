@@ -1,13 +1,14 @@
-# Handoff — LAN Family Dayboard verification 3
+# Handoff — LAN Family Dayboard review 2
 
 ## Status
 
-PASS. Independent verification 3 found zero findings and zero untested public
-claims. The product shows today’s and tomorrow’s family events and recurring
-responsibilities on a shared display without household accounts.
+PASS. Review 2 found zero findings and zero untested public claims. No product
+code changed in this review. The product shows today’s and tomorrow’s family
+events and recurring responsibilities on a shared display without household
+accounts.
 
 Implementation candidate: 6547272dad0ce008e35828a23fca95d9be9f3a7b.
-Documentation baseline: f3a22c7d490261bd7216cbfabcdac6cd8b935f64.
+Documentation baseline: f73e25729be55e5ddc37105eb01151b039cd5b1c.
 The live product at https://lan-family-dayboard.sociobot.in matches this
 implementation candidate byte-for-byte for every emitted runtime file.
 
@@ -72,8 +73,9 @@ Additional checks:
 - Initial JavaScript is 31.21 KB raw and 10.84 KB gzip. CSS is 16.52 KB raw
   and 4.35 KB gzip.
 
-Verification-3 evidence is under `/work/.evidence/lan-dayboard-verify-3-live/`.
-The complete report is `.factory/verification-3.md`.
+Review-2 smoke evidence is under `/work/.evidence/lan-dayboard-review-2-smoke/`.
+The complete review is `.factory/review-2.md`; the required factory evidence
+is `/work/.evidence/qa-report.md` and `/work/.evidence/qa-result.json`.
 
 ## Earlier findings
 
